@@ -1,3 +1,11 @@
+/*
+ * @author charlizeaponte and Anton
+ * Assignment: Edit Distance using Dynamic Programming
+ * Date: 02/7/24
+ * 
+ */
+
+
 import java.util.Scanner; 
 
 public class editDistance {
