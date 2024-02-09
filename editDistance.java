@@ -6,7 +6,7 @@
  */
 
 
-import java.util.Arrays;
+
 import java.util.Scanner; 
 
 public class editDistance {
@@ -31,128 +31,91 @@ public class editDistance {
         //Create 2d array for distance tracking
         int[][] d = new int[input1_length+1][input2_length+1];
         //Create 2d array for tracking which edit you are doing
-        String[][] edits = new String[input1_length+1][input2_length+1];
+        String[][] methods = new String[input1_length+1][input2_length+1];
+
 
         /**
-         *Dynamic Programming solution:
-         Define: D(i, j) as the edit distance between the first i characters of input1 (S) and the first j characters of input2 (T)
-         D(i,j) = min {
-            j                   if i <= 0 (base case)
-            i                   if j <= 0 (base case)
-            D(i-1, j-1)         if i > 0, j > 0, and Si = Tj
-            D(i-1, j) + 1       if i > 0, j > 0 (insert) $2
-            D(i, j-1) + 1       if i > 0, j > 0 (delete) $2
-            D(i-1, j-1) + 1     if i > 0, j > 0 (substitute) $3
-         }
+         *Dynamic Programming solution: 
+         D(i,j) = min{
+            j                   if i <= 0 base case
+            i                   if j <= 0 base case
+            D(i-1,j-1)          if i>0,J>0(insert)   
+            D(i,j-1)+1          if i>0, j> 0 (delete)
+            D(i-1,j-1)+1        if i>0,j>0 (replace)
 
-          Running Time:  O(nm)
 
-        */
+          Running Time:  O(nm) 
+            */
+    // Base cases
+        for (int i = 0; i <= input1_length; i++) {
+         d[i][0] = i * 2; // Cost of deletion
+    }
+    for (int j = 0; j <= input2_length; j++) {
+        d[0][j] = j * 2; // Cost of insertion
+    }
 
-        // Base cases (where indexes are at a 0)
-        for(int i = 0; i <= input1_length;i++){
-            d[i][0]=i;
-            if (i == 0){
-                edits[i][0] = "Nothing";
-            }
-            else if (i < input1_length){
-                edits[i][0] = String.format("Delete %s", input1.charAt(i));
-            }
-        }
-        for(int j = 0; j <= input2_length;j++){
-            d[0][j]=j; 
-            if (j == 0){
-                edits[0][j] = "Nothing";
-            }
-            else if (j < input2_length){
-                edits[0][j] = String.format("Insert %s", input2.charAt(j));
-            }
-        }
-
-        // Filling in the rest of the table after the base case
-        for(int i = 1; i <= input1_length; i++){
-            for(int j = 1; j <= input2_length; j++){
-
-                // Find the min value between all of the cases
-                int minValue = 1000;
-                // Keep track of action
-                String action = "";
-
-                // D(i-1, j-1)         if i > 0, j > 0, and Si = Ti
-                // (if letters are the same at this point)
-                if(input1.charAt(i-1) == input2.charAt(j-1)){
-                    minValue = d[i-1][j-1];
-                    action = "Nothing";
-                }
-
-                // D(i-1, j) + 2       if i > 0, j > 0 (insert) $2
-                // (if you must add a letter)
-                else if (input1.substring(0, i-1).length() < input2.substring(0, j-1).length()){
-                    int val = d[i][j-1] + 1;
-                    if(minValue > val){
-                        minValue = val;
-                    }
-                    action = String.format("Insert %s", input2.charAt(j-1));
-                }
-
-                // D(i, j-1) + 1       if i > 0, j > 0 (delete) $2
-                // (if you must subtract a letter)
-                else if(input1.substring(0, i-1).length() > input2.substring(0, j-1).length()){
-                    int val = d[i-1][j] + 1;
-                    if(minValue > val){
-                        minValue = val;
-                    }
-                    action = String.format("Delete %s", input1.charAt(i-1));
-                }
-
-                // D(i-1, j-1) + 1     if i > 0, j > 0 (substitute) $3
-                // (if you must swap letter)
-                else {
-                    int val = d[i-1][j-1] + 1;
-                    if(minValue > val){
-                        minValue = val;
-                    }
-                    action = String.format("Replace %s with %s", input1.charAt(i-1), input2.charAt(j-1));
-                }
-
-                d[i][j] = minValue;
-                edits[i][j] = action;
-                
+  // Fill the D table
+  // Loop through each character of input1 and input2
+for (int i = 1; i <= input1_length; i++) {
+    for (int j = 1; j <= input2_length; j++) {
+        // If characters at current positions are the same, no operation is needed
+        if (input1.charAt(i - 1) == input2.charAt(j - 1)) {
+            d[i][j] = d[i - 1][j - 1]; // no operation needed
+        } else {
+            // Calculate costs for each operation
+            int replace = d[i - 1][j - 1] + 3; // Cost of substitution
+            int delete = d[i - 1][j] + 2;      // Cost of deletion
+            int insert = d[i][j - 1] + 2;      // Cost of insertion
+            
+            // Choose the minimum of the three methods
+            if (replace <= delete && replace <= insert) {
+                // Replace operation
+                d[i][j] = replace;
+                methods[i][j] = "Replace " + input1.charAt(i - 1) + " with " + input2.charAt(j - 1);
+            } else if (delete <= replace && delete <= insert) {
+                // Delete operation
+                d[i][j] = delete;
+                methods[i][j] = "Delete " + input1.charAt(i - 1);
+            } else {
+                // Insert operation
+                d[i][j] = insert;
+                methods[i][j] = "Insert " + input2.charAt(j - 1);
             }
         }
-
-        // DEBUG - array view
-        // for (int[] is : d) {
-        //     System.out.println(Arrays.toString(is));
-        // }
-        
-        //print statements
-        System.out.println();
-        System.out.println(String.format("Edit Distance is %d", d[input1_length][input2_length]));
-
-        // reconstructing actions
-        int i = input1_length;
-        int j = input2_length;
-        while(i >= 0 && j >= 0){
-            String act = edits[i][j];
-            if(act.charAt(0) == 'N'){
-                i--;
-                j--;
-            }
-            else if(act.charAt(0) == 'I'){
-                System.out.println(act);
-                j--;
-            }
-            else if(act.charAt(0) == 'D'){
-                System.out.println(act);
-                i--;
-            }
-            else if(act.charAt(0) == 'R'){
-                System.out.println(act);
-                i--;
-                j--;
-            }
-        }
-        
     }
 }
+
+    // Print the edit distance
+    int editDistance = d[input1_length][input2_length];
+    System.out.println("Edit Distance is " + editDistance);
+    
+    // Print the methods performed and string after each step
+    String result = input1;
+    for (int i = input1_length, j = input2_length; i > 0 || j > 0;) {
+        if (i > 0 && j > 0 && input1.charAt(i - 1) == input2.charAt(j - 1)) {
+            i--;
+            j--;
+            continue;
+        }
+        String op = methods[i][j];
+        if (op != null) {
+            if (op.startsWith("Replace")) {
+                System.out.println(result + ": " + op);
+                result = result.substring(0, i - 1) + input2.charAt(j - 1) + result.substring(i);
+                i--;
+                j--;
+            } else if (op.startsWith("Delete")) {
+                System.out.println(result + ": " + op);
+                result = result.substring(0, i - 1) + result.substring(i);
+                i--;
+            } else if (op.startsWith("Insert")) {
+                System.out.println(result + input2.charAt(j - 1) + ": " + op);
+                result = result.substring(0, i) + input2.charAt(j - 1) + result.substring(i);
+                j--;
+            }
+        }
+    }
+    System.out.println(result);
+    }
+
+ }
