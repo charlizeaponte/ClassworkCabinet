@@ -1,5 +1,5 @@
 /**
- * @author Charlize Aponte
+ * @author Charlize Aponte and Anton
  * Date: 02/09/2024
  *  Asssignment: Longest Common SubSequence using Dynamic Programming
  */
