@@ -37,8 +37,8 @@ public class editDistance {
         /**
          *Dynamic Programming solution: 
          D(i,j) = min{
-            j                   if i <= 0 base case
-            i                   if j <= 0 base case
+            j*2                   if i <= 0 base case
+            i*2                   if j <= 0 base case
             D(i-1,j-1)          if i>0,J>0(insert)   
             D(i,j-1)+1          if i>0, j> 0 (delete)
             D(i-1,j-1)+1        if i>0,j>0 (replace)
