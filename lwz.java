@@ -13,7 +13,7 @@ public class lwz{
         System.out.println("Enter the letter 'C' for compression or 'D' for decompression:");
         String choice = scan.nextLine().toUpperCase();
        
-
+         // Check user choice
         if (choice.equals("C")) {
             System.out.println("Enter the DNA sequence (string of A, C, G, T):");
             String inputString = scan.nextLine();
@@ -29,6 +29,8 @@ public class lwz{
         }
         scan.close();
     }
+
+     // Compression function
     public static String compress(String uncompressed) {
         HashMap<String, Integer> dictionary = new HashMap<>();
         dictionary.put("A", 0);
@@ -40,6 +42,7 @@ public class lwz{
         String current = "";
         int index = 4;
 
+        // Compress the input string
         for (char c : uncompressed.toCharArray()) {
             String next = current + c;
             if (dictionary.containsKey(next)) {
@@ -56,6 +59,7 @@ public class lwz{
 
         return compressed;
     }
+    // Decompression function
     public static String decompress(String compressed) {
         HashMap<Integer, String> dictionary = new HashMap<>();
         dictionary.put(0, "A");
@@ -70,6 +74,7 @@ public class lwz{
         String previous = dictionary.get(Integer.parseInt(parts[0]));
         decompressed += previous;
 
+        // Decompress the input string
         for (int i = 1; i < parts.length; i++) {
             String current;
             int currentIndex = Integer.parseInt(parts[i]);
@@ -78,7 +83,7 @@ public class lwz{
             } else if (currentIndex == index) {
                 current = previous + previous.charAt(0);
             } else {
-                return "Invalid compressed sequence";
+                return "Invalid sequence";
             }
             decompressed += current;
             dictionary.put(index++, previous + current.charAt(0));
