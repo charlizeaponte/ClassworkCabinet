@@ -20,16 +20,13 @@ class BTree:
 
     def insert(self, num: int):
         root = self.root
+        self.insertNum(root, num)
         # If the node is full
-        if len(root.keys) == (2 * self.order) - 1:
+        if len(root.keys) == self.order:
             newParent = Node(False) # Create new parent node
             self.root = newParent # The parent node is the new root
-            newParent.children.insert(0, root) # The parent node inherits the full node as a child
-            self.splitChild(newParent, 0) # We have to split the new parent node
-            self.insertNum(newParent, num) # Insert the new number into new parent
-        # Node has space
-        else:
-            self.insertNum(root, num) # Insert the new number into new parent
+            newParent.children.insert(0, root) # The parent node inherits the full node as a left child
+            self.splitChild(newParent, 0, False) # We have to split the new parent node
 
     def insertNum(self, node: Node, num: int):
         i = len(node.keys) - 1 # Get index of last element in current node
@@ -46,24 +43,31 @@ class BTree:
             while i >= 0 and num < node.keys[i]:
                 i -= 1
             i += 1
+            # if num > node.keys[i]:
+            #     i += 1
+            self.insertNum(node.children[i], num) # Insert into the child node
             # Check if child node is full
-            if (len(node.children[i].keys) == (2 * self.order) - 1):
+            if (len(node.children[i].keys) == self.order):
                 self.splitChild(node, i) # Split if so
-                if num > node.keys[i]:
-                    i += 1
-            self.insertNum(node.children[i], num) # Insert into the newly split child node
     
-    def splitChild(self, node: Node, i: int):
-        childToSplit = node.children[i] # Find the node to split
-        newNode = Node(childToSplit.isLeaf) # Make a new node for the split
-        node.children.insert(i + 1, newNode) # insert the new node as a child
-        node.keys.insert(i, childToSplit.keys[self.order-1]) # insert the key
-        newNode.keys = childToSplit.keys[self.order:(2*self.order)-1] # set new keys of the new node
-        childToSplit.keys = childToSplit.keys[0:self.order-1] # set the new keys of the parent node
+    def splitChild(self, newParent: Node, i: int, test=False):
+        childToSplit = newParent.children[i] # Get the node to split
+        newNode = Node(childToSplit.isLeaf) # Make a right child
+        newParent.children.insert(i + 1, newNode) # Insert the right child node to the parent
+        newParent.keys.insert(i, childToSplit.keys[self.order//2]) # the key to insert is the middle value of the full node
+        newNode.keys = childToSplit.keys[self.order//2 + 1:] # The right child gets all values to the right of the middle values
+        # print(childToSplit.keys)
+        if test:
+            childToSplit.keys = childToSplit.keys[:self.order//2-1] # The left child inherits all other keys
+        else:
+            childToSplit.keys = childToSplit.keys[:self.order//2]
+        # print(childToSplit.keys)
         # If the child is not a leaf, then the new node inherits children, and the original node inherits all other children.
         if not childToSplit.isLeaf:
-            newNode.children = childToSplit.children[self.order:2*self.order]
-            childToSplit.children = childToSplit.children[0:self.order-1]
+            newNode.children = childToSplit.children[self.order//2 + 1:]
+            childToSplit.children = childToSplit.children[:self.order//2]
+            # print(newNode.children)
+            # print(childToSplit.children)
     
     def print(self, x, l=0):
         print("Level ", l, " ", len(x.keys), end=":")
@@ -104,9 +108,11 @@ if __name__ == '__main__':
     tree = BTree(order)
     for num in nums:
         tree.insert(num)
-    
-    tree.print(tree.root)
+        # tree.print(tree.root)
+        # input()
 
+    # tree.print(tree.root)
+    
     for num in search:
         print(tree.search(num))
 
