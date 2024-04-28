@@ -20,6 +20,13 @@ class BTreeNode {
     boolean isLeaf;
 
     // Constructor
+    // *************************************
+    // DUNCAN: You are treating the degree incorrectly. It seems that 2*degree-1 is the number of
+    // keys that can be stored. But the degree represents the maximum number of children each node
+    // can have. E.g. Order-5 means every node can have at most 5 children 
+    // and hence at most 4 keys. Using 2*d-1 will not make it consistent with the problem.
+    // *************************************
+
     public BTreeNode(int degree, boolean isLeaf) {
         this.degree = degree;
         this.isLeaf = isLeaf;
@@ -41,13 +48,21 @@ class BTreeNode {
         }
       
         if (isLeaf)
-          return 0;
-      
+          return 0;  // DUCAN: Why 0? It just checked this node for the key. Why not 1?
+    
+        // DUNCAN: This looks problematic. The loop above would have stopped only 
+        // when key <= keys[i] or i >= numKeys. So, either this check is false or 
+        // it will check outside the valid range. Not sure what its purpose is.
+        // The loop above would have stopped once you found the key that it goes after.
+
         // Check if child might contain the key even if full
         if (key > keys[i]) {
           i++;
         }
       
+        // DUNCAN: This should not happen either. Unless it is a leaf 
+        // (which you already checked), there should always be a child for i.
+
         // Check for null child before recursive call
         if (children[i] != null) { 
       
@@ -57,7 +72,8 @@ class BTreeNode {
               break; 
             }
           }
-          
+
+          // DUNCAN: This should be the recursive call you make.
           return blocksRead + children[i].search(key); // Recursive call
         } else {
           return blocksRead; // Child doesn't exist, return current count
@@ -81,7 +97,16 @@ class BTreeNode {
             // Find the appropriate child to insert the key
             while (i >= 0 && keys[i] > key)
                 i--;
-    
+
+            // DUNCAN: I think this approach is going to be problematic.
+            //    1) You are using the wrong max # of keys. It should be degree-1.
+            //    2) You are assuming if a child has max keys that it must be split.
+            //       That is only true if the child is itself a leaf of splits upwards.
+            //       What you should do is insert it into the child always. And have the
+            //       child return if it had to be split so this node can do the split properly
+            //       and propagate back up the tree.
+            //    This will be the main thing that I think will cause a little trouble in updating
+            //    the implementation properly.
             if (children[i + 1].numKeys == 2 * degree - 1) {
                 
                 splitChild(i + 1, children[i + 1]);
@@ -148,6 +173,7 @@ class BTree {
             root.keys[0] = key;
             root.numKeys = 1;
         } else {
+            // DUNCAN: Same issue with incorrect maximum number of keys.
             if (root.numKeys == 2 * degree - 1) {
                 BTreeNode s = new BTreeNode(degree, false);
                 s.children[0] = root;
@@ -184,8 +210,14 @@ public class BTrees {
             elements.add(scan.nextInt());
         }
 
+        // *******************************************
+        // DUNCAN: They should NOT be randomized. Otherwise, your answers would 
+        // not match my test cases. In addition, B-trees have good balance even when the
+        // elements do not come in random order. Commenting out.
+        // *******************************************
+
         // Randomize the order of elements
-        Collections.shuffle(elements);
+        // Collections.shuffle(elements);
 
         // Insert elements in the randomized order
         for (Integer element : elements) {
