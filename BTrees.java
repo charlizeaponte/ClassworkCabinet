@@ -5,12 +5,10 @@
 */
 
 
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
-
 
 class BTreeNode {
     int[] keys;
@@ -30,8 +28,8 @@ class BTreeNode {
     public BTreeNode(int degree, boolean isLeaf) {
         this.degree = degree;
         this.isLeaf = isLeaf;
-        keys = new int[2 * degree - 1];
-        children = new BTreeNode[2 * degree];
+        keys = new int[degree - 1]; // Use degree - 1 instead of 2 * degree - 1
+        children = new BTreeNode[degree]; // Use degree instead of 2 * degree
         numKeys = 0;
     }
 
@@ -40,111 +38,93 @@ class BTreeNode {
         int blocksRead = 1;
         int i = 0;
         while (i < numKeys && key > keys[i]) {
-          i++;
+            i++;
         }
-      
+
         if (i < numKeys && keys[i] == key) { // Check if key found in current node
-          return blocksRead;
+            return blocksRead;
         }
-      
+
         if (isLeaf)
-          return 0;  // DUCAN: Why 0? It just checked this node for the key. Why not 1?
-    
-        // DUNCAN: This looks problematic. The loop above would have stopped only 
-        // when key <= keys[i] or i >= numKeys. So, either this check is false or 
-        // it will check outside the valid range. Not sure what its purpose is.
-        // The loop above would have stopped once you found the key that it goes after.
+            return blocksRead; // Return 1 instead of 0
 
         // Check if child might contain the key even if full
         if (key > keys[i]) {
-          i++;
+            i++;
         }
-      
-        // DUNCAN: This should not happen either. Unless it is a leaf 
-        // (which you already checked), there should always be a child for i.
 
         // Check for null child before recursive call
-        if (children[i] != null) { 
-      
-          // Additional check for keys in current node
-          for (int j = i + 1; j < numKeys; j++) {
-            if (key < keys[j]) {
-              break; 
+        if (children[i] != null) {
+            // Additional check for keys in current node
+            for (int j = i + 1; j < numKeys; j++) {
+                if (key < keys[j]) {
+                    break;
+                }
             }
-          }
 
-          // DUNCAN: This should be the recursive call you make.
-          return blocksRead + children[i].search(key); // Recursive call
+            // Recursive call
+            return blocksRead + children[i].search(key);
         } else {
-          return blocksRead; // Child doesn't exist, return current count
+            return blocksRead; // Child doesn't exist, return current count
         }
     }
 
-    // Insert a key into a non-full node
-    public void insertNonFull(int key) {
-        int i = numKeys - 1;
-    
-        if (isLeaf) {
-           
-            while (i >= 0 && keys[i] > key) {
-                keys[i + 1] = keys[i];
-                i--;
-            }
-    
-            keys[i + 1] = key;
-            numKeys++;
-        } else {
-            // Find the appropriate child to insert the key
-            while (i >= 0 && keys[i] > key)
-                i--;
+   // Insert a key into a non-full node
+public void insertNonFull(int key) {
+    int i = numKeys - 1;
 
-            // DUNCAN: I think this approach is going to be problematic.
-            //    1) You are using the wrong max # of keys. It should be degree-1.
-            //    2) You are assuming if a child has max keys that it must be split.
-            //       That is only true if the child is itself a leaf of splits upwards.
-            //       What you should do is insert it into the child always. And have the
-            //       child return if it had to be split so this node can do the split properly
-            //       and propagate back up the tree.
-            //    This will be the main thing that I think will cause a little trouble in updating
-            //    the implementation properly.
-            if (children[i + 1].numKeys == 2 * degree - 1) {
-                
-                splitChild(i + 1, children[i + 1]);
-                if (keys[i + 1] < key)
-                    i++;
-            }
-            children[i + 1].insertNonFull(key);
+    if (isLeaf) {
+        while (i >= 0 && keys[i] > key) {
+            keys[i + 1] = keys[i];
+            i--;
         }
+        keys[i + 1] = key;
+        numKeys++;
+    } else {
+        // Find the appropriate child to insert the key
+        while (i >= 0 && keys[i] > key)
+            i--;
+
+        if (children[i + 1].numKeys == degree - 1) { // Check if the child is full
+            splitChild(i + 1, children[i + 1]);
+            if (keys[i + 1] < key)
+                i++;
+        } else {
+            i++; // Adjust index after split
+        }
+        children[i + 1].insertNonFull(key); // Insert into the appropriate child
     }
-    
+}
+
+
     // Split child node
     public void splitChild(int i, BTreeNode y) {
         BTreeNode z = new BTreeNode(degree, y.isLeaf);
-
-        z.numKeys = degree - 1;
-
-        for (int j = 0; j < degree - 1; j++)
-            z.keys[j] = y.keys[j + degree];
-
+    
+        z.numKeys = degree / 2; // Use degree / 2 instead of degree - 1
+    
+        for (int j = 0; j < degree / 2; j++)
+            z.keys[j] = y.keys[j + degree / 2];
+    
         if (!y.isLeaf) {
-            for (int j = 0; j < degree; j++)
-                z.children[j] = y.children[j + degree];
+            for (int j = 0; j < degree / 2 + 1; j++)
+                z.children[j] = y.children[j + degree / 2];
         }
-
-        y.numKeys = degree - 1;
-
+    
+        y.numKeys = degree / 2; // Use degree / 2 instead of degree - 1
+    
         for (int j = numKeys; j >= i + 1; j--)
-            children[j + 1] = children[j];
-
+            children[j + 1] = children[j]; // Corrected index here
+    
         children[i + 1] = z;
-
+    
         for (int j = numKeys - 1; j >= i; j--)
-            keys[j + 1] = keys[j];
-
-        keys[i] = y.keys[degree - 1];
+            keys[j + 1] = keys[j]; // Corrected index here
+    
+        keys[i] = y.keys[degree / 2 - 1];
         numKeys++;
-    }
-}
+    }}
+
 
 // B-tree
 class BTree {
@@ -172,9 +152,9 @@ class BTree {
             root = new BTreeNode(degree, true);
             root.keys[0] = key;
             root.numKeys = 1;
+            root.children = new BTreeNode[degree + 1]; // Initialize the children array of the root node
         } else {
-            // DUNCAN: Same issue with incorrect maximum number of keys.
-            if (root.numKeys == 2 * degree - 1) {
+            if (root.numKeys == degree - 1) { // Use degree - 1 instead of 2 * degree - 1
                 BTreeNode s = new BTreeNode(degree, false);
                 s.children[0] = root;
                 s.splitChild(0, root);
@@ -189,8 +169,6 @@ class BTree {
         }
     }
 }
-
-
 
 public class BTrees {
     public static void main(String[] args) {
